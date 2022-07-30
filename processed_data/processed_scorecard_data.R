@@ -4,8 +4,6 @@ library(purrr)
 library(tidyverse)
 library(vtable)
 
-library(patchwork)
-
 ## Trends clean and aggregation
 trends_vec <- list.files("data/",pattern = "trends_up_to_", full.names = TRUE)
 
@@ -111,8 +109,6 @@ m15 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem | CONTR
 m16 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem + UG25abv | CONTROL, se = "hetero")
 m17 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
 
-m19 <- scorecard_f %>% feols(med_earnings_10yrs ~ SAT_AVG)
-etable(m19)
 etable(m15, m16, m17)
 
 wald(m16, c("prgm_prct_stem", "UG25abv"))
