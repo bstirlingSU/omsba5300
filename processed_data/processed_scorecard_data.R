@@ -71,18 +71,16 @@ scorecard <- scorecard %>% mutate(earn_cat = case_when(earn_cat == "high" ~ 1,
 scorecard <- scorecard %>% mutate(across(c(SAT_AVG, UGDS, GRAD_DEBT_MDN_SUPP, UG25abv), as.numeric))
 scorecard <- scorecard %>% mutate(across(contains("PCIP"), as.numeric))
 scorecard <- scorecard %>% mutate(across(contains("PCT"), as.numeric))
-scorecard <- scorecard %>% mutate (prgm_prct_stem_lg_bus = rowSums(across(c("PCIP10",
+scorecard <- scorecard %>% mutate (prgm_prct_stem = rowSums(across(c("PCIP10",
                                                                      "PCIP11",
                                                                      "PCIP14", 
                                                                      "PCIP15",
-                                                                     "PCIP22",
                                                                      "PCIP26", 
                                                                      "PCIP27", 
                                                                      "PCIP29", 
                                                                      "PCIP40", 
                                                                      "PCIP41", 
-                                                                     "PCIP51",
-                                                                     "PCIP52")))) # Sums % STEM program
+                                                                     "PCIP51")))) # Sums % STEM program
 
 scorecard_f <- scorecard %>%
   inner_join(id_name_link, by = c("UNITID" = "unitid", "OPEID" = "opeid")) %>%
@@ -91,15 +89,17 @@ scorecard_f <- scorecard %>%
 View(scorecard_f)
 
 View(scorecard_f %>% filter(`med_earnings_10yrs` > 80000) %>% arrange(desc(`med_earnings_10yrs`)))
+View(scorecard_f %>% group_by(CONTROL) %>% summarize(cnt = n()))
 
 m1 <- scorecard_f %>% feols(ind_z_shift ~ high_earning)
 m2 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + CONTROL)
-m3 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | CONTROL)
+m3 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | CONTROL, se = "hetero")
+
 m4 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | LOCALE)
 m5 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv)
 m6 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL)
-m7 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem_lg_bus)
-m8 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem_lg_bus | CONTROL)
+m7 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem)
+m8 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem | CONTROL)
 m9 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + SAT_AVG)
 m10 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + SAT_AVG | CONTROL)
 m11 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTPELL)
@@ -107,14 +107,19 @@ m12 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTPELL | CONTROL)
 m13 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTFLOAN)
 m14 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTFLOAN | CONTROL)
 
-etable(m1, m2, m3)
+m15 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem | CONTROL, se = "hetero")
+m16 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem + UG25abv | CONTROL, se = "hetero")
+m17 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
 
-wald(m8, "prgm_prct")
+etable(m15, m16, m17)
+
+wald(m16, c("prgm_prct_stem", "UG25abv"))
+
 scorecard_f %>% ggplot(aes(x = `med_earnings_10yrs`)) + geom_histogram(bins = 100)
 scorecard_f %>% ggplot(aes(factor(high_earning), GRAD_DEBT_MDN_SUPP)) + geom_boxplot()
-scorecard_f %>% ggplot(aes(factor(high_earning), prgm_prct_stem_lg_bus)) + geom_boxplot()
+scorecard_f %>% ggplot(aes(factor(high_earning), prgm_prct_stem)) + geom_boxplot()
 scorecard_f %>% ggplot(aes(factor(high_earning), SAT_AVG)) + geom_boxplot()
-scorecard_f %>% ggplot(aes(prgm_prct_stem_lg_bus, med_earnings_10yrs)) +
+scorecard_f %>% ggplot(aes(prgm_prct_stem, med_earnings_10yrs)) +
   geom_point() + geom_smooth(method = "lm")
 
 
