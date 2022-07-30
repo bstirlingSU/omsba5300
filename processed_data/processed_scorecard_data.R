@@ -84,7 +84,7 @@ scorecard_f <- scorecard %>%
   inner_join(id_name_link, by = c("UNITID" = "unitid", "OPEID" = "opeid")) %>%
   inner_join(trends, by = "schname") %>% subset(select = -schname)
 
-View(scorecard_f)
+save(scorecard_f, file = "processed_data/processed_scorecard.RData")
 
 View(scorecard_f %>% filter(`med_earnings_10yrs` > 80000) %>% arrange(desc(`med_earnings_10yrs`)))
 View(scorecard_f %>% group_by(CONTROL) %>% summarize(cnt = n()))
