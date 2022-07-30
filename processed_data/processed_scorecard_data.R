@@ -111,6 +111,8 @@ m15 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem | CONTR
 m16 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem + UG25abv | CONTROL, se = "hetero")
 m17 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
 
+m19 <- scorecard_f %>% feols(med_earnings_10yrs ~ SAT_AVG)
+etable(m19)
 etable(m15, m16, m17)
 
 wald(m16, c("prgm_prct_stem", "UG25abv"))
@@ -120,6 +122,8 @@ scorecard_f %>% ggplot(aes(factor(high_earning), GRAD_DEBT_MDN_SUPP)) + geom_box
 scorecard_f %>% ggplot(aes(factor(high_earning), prgm_prct_stem)) + geom_boxplot()
 scorecard_f %>% ggplot(aes(factor(high_earning), SAT_AVG)) + geom_boxplot()
 scorecard_f %>% ggplot(aes(prgm_prct_stem, med_earnings_10yrs)) +
+  geom_point() + geom_smooth(method = "lm")
+scorecard_f %>% ggplot(aes(SAT_AVG, med_earnings_10yrs)) +
   geom_point() + geom_smooth(method = "lm")
 
 
