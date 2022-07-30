@@ -1,0 +1,68 @@
+---
+title: "analysis"
+author: "Brad Stirling"
+date: "2022-07-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(fixest)
+library(tidyverse)
+library(vtable)
+```
+
+```{r}
+load("processed_data/processed_scorecard.RData")
+```
+
+```{r}
+View(scorecard_f %>% filter(`med_earnings_10yrs` > 80000) %>% arrange(desc(`med_earnings_10yrs`)))
+View(scorecard_f %>% group_by(CONTROL) %>% summarize(cnt = n()))
+```
+
+```{r}
+m1 <- scorecard_f %>% feols(ind_z_shift ~ high_earning)
+m2 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + CONTROL)
+m3 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | CONTROL, se = "hetero")
+
+m4 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | LOCALE)
+m5 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv)
+m6 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL)
+m7 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem)
+m8 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem | CONTROL)
+m9 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + SAT_AVG)
+m10 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + SAT_AVG | CONTROL)
+m11 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTPELL)
+m12 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTPELL | CONTROL)
+m13 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTFLOAN)
+m14 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTFLOAN | CONTROL)
+
+m15 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem | CONTROL, se = "hetero")
+m16 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem + UG25abv | CONTROL, se = "hetero")
+m17 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
+```
+
+```{r}
+etable(m15, m16, m17)
+
+wald(m16, c("prgm_prct_stem", "UG25abv"))
+```
+
+```{r, echo=FALSE}
+scorecard_f %>% ggplot(aes(x = `med_earnings_10yrs`)) + geom_histogram(bins = 100)
+scorecard_f %>% ggplot(aes(factor(high_earning), GRAD_DEBT_MDN_SUPP)) + geom_boxplot()
+scorecard_f %>% ggplot(aes(factor(high_earning), prgm_prct_stem)) + geom_boxplot()
+scorecard_f %>% ggplot(aes(factor(high_earning), SAT_AVG)) + geom_boxplot()
+scorecard_f %>% ggplot(aes(prgm_prct_stem, med_earnings_10yrs)) +
+  geom_point() + geom_smooth(method = "lm")
+```
