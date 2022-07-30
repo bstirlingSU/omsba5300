@@ -1,8 +1,6 @@
-library(fixest)
 library(lubridate)
 library(purrr)
 library(tidyverse)
-library(vtable)
 
 ## Trends clean and aggregation
 trends_vec <- list.files("data/",pattern = "trends_up_to_", full.names = TRUE)
