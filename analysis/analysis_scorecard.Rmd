@@ -21,6 +21,7 @@ scorecard_f <- read_csv("processed_data/processed_scorecard.csv", show_col_types
 ```
 
 ```{r}
+View(scorecard_f)
 View(scorecard_f %>% filter(`med_earnings_10yrs` > 80000) %>% arrange(desc(`med_earnings_10yrs`)))
 View(scorecard_f %>% group_by(CONTROL) %>% summarize(cnt = n()))
 ```
