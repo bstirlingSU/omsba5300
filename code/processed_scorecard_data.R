@@ -9,14 +9,16 @@ trends <- map_df(trends_vec, read_csv) %>%
   drop_na()
 trends <- trends %>% mutate(date_wk_s = str_sub(monthorweek, 1, 10))
 trends <- trends %>% mutate(date_wk_s = ymd(date_wk_s))
-trends <- trends %>% 
+trends <- trends %>%
   filter( date_wk_s > ymd(20140831) & date_wk_s < ymd(20150328) | date_wk_s > ymd(20150831)) # Compares sep14 to mar15 and sep15 to mar16
-trends <- trends %>% mutate(sc_implmnt = date_wk_s >= ymd(20150901)) 
+trends <- trends %>% mutate(sc_implmnt = date_wk_s >= ymd(20150901))
 trends <- trends %>% group_by(schname, keyword) %>%
   mutate(ind_mean = mean(index, na.rm = TRUE))
 trends <- trends %>% group_by(schname, keyword) %>%
   mutate(ind_std = sd(index)) %>% ungroup()
   
+trends %>% ggplot(aes(ind_std)) + geom_histogram(bins = 100) # Check if z-scores follow normal distribution
+
 trends <- trends %>% mutate(ind_stand = (index - ind_mean)/ind_std) # Standardize rankings
 trends <- trends %>% group_by(schname, sc_implmnt) %>%
   mutate(ind_stand_pre_sc = case_when(sc_implmnt != TRUE ~ mean(ind_stand, na.rm = TRUE),
@@ -75,7 +77,7 @@ scorecard <- scorecard %>% mutate (prgm_prct_stem = rowSums(across(c("PCIP10",
                                                                      "PCIP29", 
                                                                      "PCIP40", 
                                                                      "PCIP41", 
-                                                                     "PCIP51")))) # Sums % STEM program
+                                                                     "PCIP51")))) # Sums percentage STEM program
 
 scorecard_f <- scorecard %>%
   inner_join(id_name_link, by = c("UNITID" = "unitid", "OPEID" = "opeid")) %>%
