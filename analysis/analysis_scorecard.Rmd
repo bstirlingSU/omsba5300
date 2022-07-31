@@ -20,6 +20,10 @@ library(vtable)
 load("processed_data/processed_scorecard.RData")
 ```
 
+## Overview
+This analysis explores the impact of the publication of the college scorecard on consumer interest in bachelor's degree-granting educational institutions. Specifically, it examines the relationship with 10-year post graduate earnings. The goal was to see if the scorecard shifted interest from schools with low post graduate earnings to schools with high ones. The analysis explored variables across intuition types, locale, average student age, percentage of STEM programs, SAT averages, post-graduation debt, and percentage of Pell Grants and all federal loans. 
+
+Consumer interest was measured by looking at the average shift in standardized Google search rankings following its publication. 
 ```{r}
 View(scorecard_f)
 View(scorecard_f %>% filter(`med_earnings_10yrs` > 80000) %>% arrange(desc(`med_earnings_10yrs`)))
@@ -53,11 +57,14 @@ m19 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + RET_FT4, se = "hetero"
 m20 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem + high_earning*prgm_prct_stem | CONTROL, se = "hetero")
 
 m21 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv + high_earning*UG25abv | CONTROL, se = "hetero")
+m22 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + GRAD_DEBT_MDN_SUPP)
+m23 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + GRAD_DEBT_MDN_SUPP | CONTROL, se = "hetero")
+
 
 ```
 
 ```{r}
-etable(m1, m17)
+etable(m22, m23)
 
 # wald(m16, c("prgm_prct_stem", "UG25abv"))
 # wald(m18, "UG25abv")
@@ -65,10 +72,10 @@ etable(m1, m17)
 
 ```{r, echo=FALSE}
 # scorecard_f %>% ggplot(aes(x = `med_earnings_10yrs`)) + geom_histogram(bins = 100)
-# scorecard_f %>% ggplot(aes(factor(high_earning), GRAD_DEBT_MDN_SUPP)) + geom_boxplot()
+scorecard_f %>% ggplot(aes(factor(high_earning), GRAD_DEBT_MDN_SUPP)) + geom_boxplot()
 # scorecard_f %>% ggplot(aes(factor(high_earning), prgm_prct_stem)) + geom_boxplot()
 # scorecard_f %>% ggplot(aes(factor(high_earning), SAT_AVG)) + geom_boxplot()
 # scorecard_f %>% ggplot(aes(prgm_prct_stem, med_earnings_10yrs)) +
   # geom_point() + geom_smooth(method = "lm")
-scorecard_f %>% ggplot(aes(RET_FT4, med_earnings_10yrs)) + geom_point() + geom_smooth(method = "lm")
+scorecard_f %>% ggplot(aes(GRAD_DEBT_MDN_SUPP, med_earnings_10yrs)) + geom_point() + geom_smooth(method = "lm")
 ```

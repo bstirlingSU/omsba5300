@@ -10,8 +10,7 @@ trends <- map_df(trends_vec, read_csv) %>%
 trends <- trends %>% mutate(date_wk_s = str_sub(monthorweek, 1, 10))
 trends <- trends %>% mutate(date_wk_s = ymd(date_wk_s))
 trends <- trends %>% 
-  filter(date_wk_s >= ymd(20140901)) %>%
-  filter( date_wk_s < ymd(20150401) | date_wk_s > ymd(20150830)) # Compares sep14 to mar15 and sep15 to mar16
+  filter( date_wk_s < ymd(20150401) | date_wk_s > ymd(20150831)) # Compares sep14 to mar15 and sep15 to mar16
 trends <- trends %>% mutate(sc_implmnt = date_wk_s >= ymd(20150901)) 
 trends <- trends %>% group_by(schname, keyword) %>%
   mutate(ind_mean = mean(index, na.rm = TRUE))
