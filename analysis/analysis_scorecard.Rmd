@@ -17,7 +17,7 @@ library(vtable)
 ```
 
 ```{r}
-scorecard_f <- read_csv("processed_data/processed_scorecard.csv", show_col_types = FALSE)
+load("processed_data/processed_scorecard.RData")
 ```
 
 ```{r}
