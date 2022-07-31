@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "C:/Users/Bstir/github/omsba5300")
 ```
 
 ## R Markdown
@@ -22,7 +23,7 @@ library(vtable)
 ```
 
 ```{r}
-load("processed_data/processed_scorecard.RData")
+scorecard_f <- read_csv("processed_data/processed_scorecard.csv", show_col_types = FALSE)
 ```
 
 ```{r}
