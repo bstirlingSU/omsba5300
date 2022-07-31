@@ -82,5 +82,5 @@ scorecard_f <- scorecard %>%
   inner_join(id_name_link, by = c("UNITID" = "unitid", "OPEID" = "opeid")) %>%
   inner_join(trends, by = "schname") %>% subset(select = -schname)
 
-save(scorecard_f, file = "processed_data/processed_scorecard.RData")
+write_csv(scorecard_f, "processed_data/processed_scorecard.csv")
 
