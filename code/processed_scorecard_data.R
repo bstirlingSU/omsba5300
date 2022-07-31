@@ -20,16 +20,10 @@ trends <- trends %>% group_by(schname, keyword) %>%
 trends %>% ggplot(aes(ind_std)) + geom_histogram(bins = 100) # Check if z-scores follow normal distribution
 
 trends <- trends %>% mutate(ind_stand = (index - ind_mean)/ind_std) # Standardize rankings
-trends <- trends %>% group_by(schname, sc_implmnt) %>%
-  mutate(ind_stand_pre_sc = case_when(sc_implmnt != TRUE ~ mean(ind_stand, na.rm = TRUE),
-                                      FALSE ~ 0)) %>% ungroup()
-trends <- trends %>% group_by(schname, sc_implmnt) %>%
-  mutate(ind_stand_post_sc = case_when(sc_implmnt == TRUE ~ mean(ind_stand, na.rm = TRUE),
-                                      FALSE ~ 0)) %>% ungroup()
 
-trends <- trends %>% group_by(schname) %>% summarize(ind_z_pre = mean(ind_stand_pre_sc, na.rm = TRUE),
-                                                  ind_z_post = mean(ind_stand_post_sc, na.rm = TRUE),
-                                                  ind_z_shift = ind_z_post - ind_z_pre)
+trends <- trends %>% group_by(schname, sc_implmnt) %>% summarize(ind_z = mean(ind_stand))
+trends <- trends %>% spread(sc_implmnt, ind_z) %>% rename(ind_z_pre = "FALSE", ind_z_post = "TRUE")
+trends <- trends %>% mutate(ind_z_shift = ind_z_post - ind_z_pre)
 
 ## Id link table clean
 id_name_link <- read_csv("data/id_name_link.csv")
@@ -47,6 +41,7 @@ scorecard <- scorecard %>%
   drop_na(`med_earnings_10yrs`)
 
 quantile(scorecard$`med_earnings_10yrs`)
+
 scorecard <- scorecard %>% mutate(earn_cat = case_when(`med_earnings_10yrs` >
                                     quantile(scorecard$`med_earnings_10yrs`)[4] ~  "high",
                                   `med_earnings_10yrs` <
