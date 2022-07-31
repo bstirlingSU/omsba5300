@@ -54,7 +54,6 @@ scorecard <- scorecard %>% mutate(earn_cat = case_when(`med_earnings_10yrs` >
                                   ) %>% filter(earn_cat != "mid") %>% 
   mutate(across(c(LOCALE, CONTROL), as.factor))
 
-
 scorecard$CONTROL <- recode_factor(scorecard$CONTROL,
                                          "1" = "Public",
                                          "2" = "PrivateNonProfit",
@@ -65,8 +64,9 @@ scorecard <- scorecard %>% mutate(earn_cat = case_when(earn_cat == "high" ~ 1,
                                                        TRUE ~ 0)) %>% rename(high_earning = earn_cat )
 
 scorecard <- scorecard %>% mutate(across(c(SAT_AVG, UGDS, GRAD_DEBT_MDN_SUPP, UG25abv), as.numeric))
-scorecard <- scorecard %>% mutate(across(contains("PCIP"), as.numeric))
+scorecard <- scorecard %>% mutate(across(contains("RET"), as.numeric))
 scorecard <- scorecard %>% mutate(across(contains("PCT"), as.numeric))
+scorecard <- scorecard %>% mutate(across(contains("PCIP"), as.numeric))
 scorecard <- scorecard %>% mutate (prgm_prct_stem = rowSums(across(c("PCIP10",
                                                                      "PCIP11",
                                                                      "PCIP14", 
