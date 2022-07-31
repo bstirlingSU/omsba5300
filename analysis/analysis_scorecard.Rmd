@@ -21,12 +21,14 @@ load("processed_data/processed_scorecard.RData")
 ```
 
 ## Overview
-This analysis explores the impact of the publication of the college scorecard on consumer interest in bachelor's degree-granting educational institutions. Specifically, it examines the relationship with 10-year post graduate earnings. The goal was to see if the scorecard shifted interest from schools with low post graduate earnings to schools with high ones. The analysis explored variables across intuition types, locale, average student age, percentage of STEM programs, SAT averages, post-graduation debt, and percentage of Pell Grants and all federal loans. 
+This analysis explores the impact of the publication of the college scorecard on consumer interest in bachelor's degree-granting educational institutions. Specifically, it examines the relationship with 10-year post graduate earnings. The goal was to see if the scorecard shifted interest from schools with low post-graduate earnings to schools with high ones. In addition to post graduate earnings, the analysis explored controls across intuition types, locale, average student age, percentage of STEM programs, SAT averages, post-graduation debt, and percentage of Pell Grants and all federal loans. 
 
-Consumer interest was measured by looking at the average shift in standardized Google search rankings following its publication. 
+Consumer interest was measured by looking at the average shift in standardized Google search rankings following the publication of the scorecard in September 2015. As the Google trends data had 7 months of post-scorecard observations, the table was filtered to 14 months for the analysis. To account for the seasonality of the college application deadlines, the 7-month pre-scorecard covered the time frame of September 2014 to March 2015. An additional binary variable was created to categorize pre and post scorecard implementation groups. 
+
+The search rankings were first standardized for each school name and keyword. A histograme of the resulting z-scores appeared normally distributed. 
+
 ```{r}
 View(scorecard_f)
-View(scorecard_f %>% filter(`med_earnings_10yrs` > 80000) %>% arrange(desc(`med_earnings_10yrs`)))
 View(scorecard_f %>% group_by(CONTROL) %>% summarize(cnt = n()))
 ```
 
