@@ -65,6 +65,8 @@ scorecard <- scorecard %>% mutate (prgm_prct_stem = rowSums(across(c("PCIP10",
                                                                      "PCIP41", 
                                                                      "PCIP51")))) # Sums percentage STEM program
 
+scorecard <- scorecard %>% mutate(stem_pri = prgm_prct_stem > 0.5)
+
 scorecard_f <- scorecard %>%
   inner_join(id_name_link, by = c("UNITID" = "unitid", "OPEID" = "opeid")) %>%
   inner_join(trends, by = "schname") %>% subset(select = -schname)

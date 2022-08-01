@@ -20,20 +20,23 @@ library(vtable)
 load("processed_data/processed_scorecard.RData")
 ```
 
-## Overview
+## Introduction and Data Cleaning Overview
 This analysis explores the impact of the publication of the college scorecard on consumer interest in bachelor's degree-granting educational institutions. Specifically, it examines the relationship with 10-year post graduate earnings. The goal was to see if the scorecard shifted interest from schools with low post-graduate earnings to schools with high ones. In addition to post graduate earnings, the analysis explored controls across intuition types, locale, average student age, percentage of STEM programs, SAT averages, post-graduation debt, and percentage of Pell Grants and all federal loans. 
 
 Consumer interest was measured by looking at the average shift in standardized Google search rankings following the publication of the scorecard in September 2015. As the Google trends data had 7 months of post-scorecard observations, the table was filtered to 14 months for the analysis. To account for the seasonality of the college application deadlines, the 7-month pre-scorecard covered the time frame of September 2014 to March 2015. An additional binary variable was created to categorize pre and post scorecard implementation groups. 
 
 The search rankings were then standardized for each school name and keyword. A histogram of the resulting z-scores showed a fairly normal-looking distribution. Next, means were created for both pre and post scorecard implementation for each school. The data set was then grouped by school and scorecard implementation category and z-score means were calculated. The z-score means were then un-pivoted in separate columns for pre and post z-score means, and the difference between the post and pre z-score rankings were added. This resulted in a trends table with a single row for each school with their corresponding scorecard-period z-score means and the post-scorecard ranking shift. The post-scorecard ranking shift was used as the outcome variable of the regression model.
 
-Next, the scorecard data set was filtered to only predominantly bachelor's degree-granting schools. Variables that were identified as potential controls, such as grants, test scores, locales, and debt were converted into either decimals or factors for regression testing. Following the initial clean up, the school id link table was filtered to remove duplicate schools with duplicate names, and inner-joined to both the scorecard and the summarized school-level trend data.
+Next, the scorecard data set was filtered to only predominantly bachelor's degree-granting schools. Variables that were identified as potential controls, such as grants, test scores, locales, and debt were converted into either decimals or factors for regression testing. Given the potential for Following the initial clean up, the school id link table was filtered to remove duplicate schools with duplicate names, and inner-joined to both the scorecard and the summarized school-level trend data.
 
 To determine the categorization of high-earning vs low-earning schools, the quantile function was used on the median-earnings 10 years post-graduation column. Schools that had values less than the 25% quantile (\$35500) were labeled as low, while schools greater than the 75% quantile (\$48100). The data set was then filtered to remove the other values, and the high-earning vs low-earning variable was re-categorized as binary, with a value of 1 indicating a high-earning school. The high-earning school binary category was used as the treatment variable of the regression model.
 
 ```{r}
-View(scorecard_f %>% group_by(high_earning) %>% summarize(cnt = n()))
+scorecard_f %>% group_by(high_earning) %>% summarize(cnt = n())
 ```
+## Data Exploration
+
+Following the initial data cleaning and creation of the treatment and outcome variables, control variables identified from the data dictionary were further explored as potential sources of endogeneity. 
 
 ```{r, echo=FALSE}
 scorecard_f %>% ggplot(aes(x = `med_earnings_10yrs`)) + 
@@ -45,9 +48,13 @@ scorecard_f %>% ggplot(aes(x = `med_earnings_10yrs`)) +
   scale_x_continuous(labels = scales::dollar_format())
   
 ```
-
 ```{r}
-View(scorecard_f %>% group_by(CONTROL) %>% summarize(cnt = n()))
+View(scorecard_f %>% filter(med_earnings_10yrs > 100000))
+```
+
+After reviewing the histogram of colleges with earnings greater than $100K, it was observed that the majority of their programs were STEM-related. As STEM fields were already being popularized for careers in high-paying professions, there was a likelihood that the release of the scorecard would not further influence consumer search behavior, and thus bias the high-earning treatment variable. To address this, the STEM program categories were summed, a binary
+```{r}
+scorecard_f %>% group_by(CONTROL) %>% summarize(cnt = n())
 ```
 
 ```{r}
@@ -109,5 +116,5 @@ scorecard_f %>% ggplot(aes(factor(high_earning), GRAD_DEBT_MDN_SUPP)) + geom_box
 # scorecard_f %>% ggplot(aes(factor(high_earning), SAT_AVG)) + geom_boxplot()
 # scorecard_f %>% ggplot(aes(prgm_prct_stem, med_earnings_10yrs)) +
   # geom_point() + geom_smooth(method = "lm")
-scorecard_f %>% ggplot(aes(GRAD_DEBT_MDN_SUPP, med_earnings_10yrs)) + geom_point() + geom_smooth(method = "lm")
+scorecard_f %>% ggplot(aes(prgm_prct_stem, med_earnings_10yrs)) + geom_point() + geom_smooth(method = "lm")
 ```
