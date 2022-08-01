@@ -2,11 +2,22 @@ library(lubridate)
 library(purrr)
 library(tidyverse)
 
+
+## Id link table clean
+id_name_link <- read_csv("data/id_name_link.csv")
+id_name_link <- id_name_link %>% group_by(schname) %>%
+  mutate(n = n()) %>% filter(n == 1) %>%
+  subset(select = -n)
+
 ## Trends clean and aggregation
 trends_vec <- list.files("data/",pattern = "trends_up_to_", full.names = TRUE)
 
 trends <- map_df(trends_vec, read_csv) %>% 
   drop_na()
+
+trends <- trends %>% mutate(sch_dup_f = schname %in% id_name_link$schname) %>% 
+  filter(sch_dup_f == TRUE) %>% subset(select = -sch_dup_f)
+
 trends <- trends %>% mutate(date_wk_s = str_sub(monthorweek, 1, 10))
 trends <- trends %>% mutate(date_wk_s = ymd(date_wk_s))
 trends <- trends %>%
@@ -24,11 +35,7 @@ trends <- trends %>% group_by(schname, sc_implmnt) %>% summarize(ind_z = mean(in
 trends <- trends %>% spread(sc_implmnt, ind_z) %>% rename(ind_z_pre = "FALSE", ind_z_post = "TRUE")
 trends <- trends %>% mutate(ind_z_shift = ind_z_post - ind_z_pre) # Calculate z-score ranking shift following scorecard launch
 
-## Id link table clean
-id_name_link <- read_csv("data/id_name_link.csv")
-id_name_link <- id_name_link %>% group_by(schname) %>%
-  mutate(n = n()) %>% filter(n == 1) %>%
-  subset(select = -n)
+
 
 ## Filter scorecard and create earning category
 scorecard <- read_csv("data/Most+Recent+Cohorts+(Scorecard+Elements).csv")
