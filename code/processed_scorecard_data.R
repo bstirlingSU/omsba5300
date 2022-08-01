@@ -16,7 +16,7 @@ trends <- map_df(trends_vec, read_csv) %>%
   drop_na()
 
 trends <- trends %>% mutate(sch_dup_f = schname %in% id_name_link$schname) %>% 
-  filter(sch_dup_f == TRUE) %>% subset(select = -sch_dup_f)
+  filter(sch_dup_f == TRUE) %>% subset(select = -sch_dup_f) # Removes duplicate school entries
 
 trends <- trends %>% mutate(date_wk_s = str_sub(monthorweek, 1, 10))
 trends <- trends %>% mutate(date_wk_s = ymd(date_wk_s))
@@ -34,8 +34,6 @@ trends <- trends %>% mutate(ind_stand = (index - ind_mean)/ind_std) # Standardiz
 trends <- trends %>% group_by(schname, sc_implmnt) %>% summarize(ind_z = mean(ind_stand)) # Calculate mean z-scores for pre and post scorecard launch
 trends <- trends %>% spread(sc_implmnt, ind_z) %>% rename(ind_z_pre = "FALSE", ind_z_post = "TRUE")
 trends <- trends %>% mutate(ind_z_shift = ind_z_post - ind_z_pre) # Calculate z-score ranking shift following scorecard launch
-
-
 
 ## Filter scorecard and create earning category
 scorecard <- read_csv("data/Most+Recent+Cohorts+(Scorecard+Elements).csv")
