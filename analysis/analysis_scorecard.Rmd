@@ -21,7 +21,7 @@ load("processed_data/processed_scorecard.RData")
 ```
 
 ## Introduction and Data Cleaning Overview
-This analysis explores the impact of the publication of the college scorecard on consumer interest in bachelor's degree-granting educational institutions. Specifically, it examines the relationship with 10-year post graduate earnings. The goal was to see if the scorecard shifted interest from schools with low post-graduate earnings to schools with high ones. In addition to post graduate earnings, the analysis explored controls across intuition types, locale, average student age, percentage of STEM programs, SAT averages, post-graduation debt, and percentage of Pell Grants and all federal loans. 
+This analysis explores the impact of the publication of the college scorecard on consumer interest in bachelor's degree-granting educational institutions. Specifically, it examines the relationship with 10-year post graduate earnings. The goal was to see if the scorecard shifted interest from schools with low post-graduate earnings to schools with high ones. In addition to post graduate earnings, the analysis explored controls across intuition types, average student age, percentage of STEM programs, SAT averages, post-graduation debt, and percentage of Pell Grants and all federal loans. 
 
 Consumer interest was measured by looking at the average shift in standardized Google search rankings following the publication of the scorecard in September 2015. As the Google trends data had 7 months of post-scorecard observations, the table was filtered to 14 months for the analysis. To account for the seasonality of the college application deadlines, the 7-month pre-scorecard covered the time frame of September 2014 to March 2015. An additional binary variable was created to categorize pre and post scorecard implementation groups. 
 
@@ -52,10 +52,21 @@ scorecard_f %>% ggplot(aes(x = `med_earnings_10yrs`)) +
 View(scorecard_f %>% filter(med_earnings_10yrs > 100000))
 ```
 
-After reviewing the histogram of colleges with earnings greater than $100K, it was observed that the majority of their programs were STEM-related. As STEM fields were already being popularized for careers in high-paying professions, there was a likelihood that the release of the scorecard would not further influence consumer search behavior, and thus bias the high-earning treatment variable. To address this, the STEM program categories were summed, a binary
+After reviewing the histogram of colleges with earnings greater than $100K, it was observed that the majority of their degrees were awarded in STEM-related categories. As STEM fields were already being popularized for careers in high-paying professions, there was a likelihood that the release of the scorecard would not further influence consumer search behavior, and thus could bias the high-earning treatment variable. To address this, the STEM program percentage categories were summed, and a binary variable was added, separating out values greater that 0.5.
+
+
+```{r}
+sat_nulls <- sum(is.na(scorecard_f$SAT_AVG))
+sprintf("Missing SAT score rows: %s", sat_nulls)
+```
+
+Average SAT scores were considered as another possible source of bias, but were dropped after reviewing the number of missing entries, and the expectation that the STEM-majority school variable would control this as high SAT scores would be necessary for admission.
+
 ```{r}
 scorecard_f %>% group_by(CONTROL) %>% summarize(cnt = n())
 ```
+
+Institution type (private profit, private non-profit, and public) was identified for inclusion as a fixed effect variable. As private universities are typically more expensive than public universities, this could also control for average grad school debt. The higher cost of the university could also be correlated with the existing expectation that the education would lead to higher post-graduation earnings. This could bias the high-earning treatment variable as consumers could have ascertained insights into median earnings prior to the release of the scorecard.
 
 ```{r}
 m1 <- scorecard_f %>% feols(ind_z_shift ~ high_earning)
@@ -80,8 +91,7 @@ m5 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv)
 m6 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
 m7 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem)
 m8 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem | CONTROL, se = "hetero")
-m9 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + SAT_AVG)
-m10 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + SAT_AVG | CONTROL)
+
 m11 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTPELL)
 m12 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTPELL | CONTROL)
 m13 <-  scorecard_f %>% feols(ind_z_shift ~ high_earning + PCTFLOAN)
@@ -92,13 +102,9 @@ m16 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem + UG25a
 m17 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
 m18 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv + I(UG25abv^2) | CONTROL, se = "hetero")
 
-m19 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + RET_FT4, se = "hetero")
-
 m20 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem + high_earning*prgm_prct_stem | CONTROL, se = "hetero")
 
 m21 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv + high_earning*UG25abv | CONTROL, se = "hetero")
-m22 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + GRAD_DEBT_MDN_SUPP)
-m23 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + GRAD_DEBT_MDN_SUPP | CONTROL, se = "hetero")
 
 ```
 
