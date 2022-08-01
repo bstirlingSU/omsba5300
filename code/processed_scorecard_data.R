@@ -70,13 +70,11 @@ scorecard_f <- scorecard %>%
   inner_join(trends, by = "schname") %>% subset(select = -schname)
 
 quantile(scorecard_f$`med_earnings_10yrs`)
-
 scorecard_f <- scorecard_f %>% mutate(earn_cat = case_when(`med_earnings_10yrs` >
                                                          quantile(scorecard_f$`med_earnings_10yrs`)[4] ~  "high",
                                                        `med_earnings_10yrs` <
                                                          quantile(scorecard_f$`med_earnings_10yrs`)[2] ~ "low",
                                                        TRUE ~ "mid")) %>% filter(earn_cat != "mid")
-
 
 scorecard_f <- scorecard_f %>% mutate(earn_cat = case_when(earn_cat == "high" ~ 1,
                                                        TRUE ~ 0)) %>% rename(high_earning = earn_cat)

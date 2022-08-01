@@ -29,7 +29,7 @@ The search rankings were then standardized for each school name and keyword. A h
 
 Next, the scorecard data set was filtered to only predominantly bachelor's degree-granting schools. Variables that were identified as potential controls, such as grants, test scores, locales, and debt were converted into either decimals or factors for regression testing. Following the initial clean up, the school id link table was filtered to remove duplicate schools with duplicate names, and inner-joined to both the scorecard and the summarized school-level trend data.
 
-As each row
+To determine the categorization of high-earning vs low-earning schools, the quantile function was used on the median-earnings 10 years post-graduation column. Schools that had values less than the 25% quantile (\$35500) were labeled as low, while schools greater than the 75% quantile (\$48100). The data set was then filtered to remove the other rows and the high-earning vs low-earning variable was re-categorized as binary, with a value of 1 indicating a high-earning school. 
 
 
 
