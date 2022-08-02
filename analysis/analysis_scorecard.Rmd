@@ -109,7 +109,7 @@ Next, the percentage of students aged 25 or older was added. Adjusting for other
 scorecard_f %>% ggplot(aes(UG25abv, ind_z_shift)) + 
   geom_point() + 
   geom_smooth(method = "lm") +
-  ggtitle("Student Age Population on Google Trend Rankings Post Scorecard Publciation ") +
+  ggtitle("Google Trend Rankings Post Scorecard Publication on Student Age Population") +
   xlab("Percentage of students 25 or older") + 
   ylab("Standard Deviations") +
   scale_x_continuous(labels = scales::percent_format())
