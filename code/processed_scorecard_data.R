@@ -28,12 +28,12 @@ trends <- trends %>% group_by(schname, keyword) %>%
 trends <- trends %>% group_by(schname, keyword) %>%
   mutate(ind_std = sd(index)) %>% ungroup()
 
-trends %>% ggplot(aes(ind_std)) + geom_histogram(bins = 100) # Check if z-scores follow normal distribution
+trends %>% ggplot(aes(ind_std)) + geom_histogram(bins = 100) # Check if standardized rankings follow normal distribution
 
 trends <- trends %>% mutate(ind_stand = (index - ind_mean)/ind_std) # Standardize rankings
-trends <- trends %>% group_by(schname, sc_implmnt) %>% summarize(ind_z = mean(ind_stand)) # Calculate mean z-scores for pre and post scorecard launch
+trends <- trends %>% group_by(schname, sc_implmnt) %>% summarize(ind_z = mean(ind_stand)) # Calculate mean standardized rankings for pre and post scorecard launch
 trends <- trends %>% spread(sc_implmnt, ind_z) %>% rename(ind_z_pre = "FALSE", ind_z_post = "TRUE")
-trends <- trends %>% mutate(ind_z_shift = ind_z_post - ind_z_pre) # Calculate z-score ranking shift following scorecard launch
+trends <- trends %>% mutate(ind_z_shift = ind_z_post - ind_z_pre) # Calculate standardized ranking shift following scorecard launch
 
 ## Filter scorecard and create earning category
 scorecard <- read_csv("data/Most+Recent+Cohorts+(Scorecard+Elements).csv")
