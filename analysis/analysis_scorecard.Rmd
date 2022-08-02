@@ -21,6 +21,7 @@ load("processed_data/processed_scorecard.RData")
 ```
 
 ## Introduction and Data Cleaning Overview
+
 This analysis explores the impact of the publication of the college scorecard on consumer interest in bachelor's degree-granting educational institutions. Specifically, it examines the relationship with 10-year post graduate earnings. The goal was to see if the scorecard shifted interest from schools with low post-graduate earnings to schools with high ones. In addition to post graduate earnings, the analysis explored controls across intuition types, average student age, percentage of STEM programs, SAT averages, post-graduation debt, and percentage of Pell Grants and all federal loans. 
 
 Consumer interest was measured by looking at the average shift in standardized Google search rankings following the publication of the scorecard in September 2015. As the Google trends data had 7 months of post-scorecard observations, the table was filtered to 14 months for the analysis. To account for the seasonality of the college application deadlines, the 7-month pre-scorecard covered the time frame of September 2014 to March 2015. An additional binary variable was created to categorize pre and post scorecard implementation groups. 
@@ -31,9 +32,6 @@ Next, the scorecard data set was filtered to only predominantly bachelor's degre
 
 To determine the categorization of high-earning vs low-earning schools, the quantile function was used on the median-earnings 10 years post-graduation column. Schools that had values less than the 25% quantile (\$35500) were labeled as low, while schools greater than the 75% quantile (\$48100). The data set was then filtered to remove the other values, and the high-earning vs low-earning variable was re-categorized as binary, with a value of 1 indicating a high-earning school. The high-earning school binary category was used as the treatment variable of the regression model.
 
-```{r}
-scorecard_f %>% group_by(high_earning) %>% summarize(cnt = n())
-```
 ## Data Exploration
 
 Following the initial data cleaning and creation of the treatment and outcome variables, control variables identified from the data dictionary were further explored as potential sources of endogeneity. 
@@ -52,7 +50,7 @@ scorecard_f %>% ggplot(aes(x = `med_earnings_10yrs`)) +
 View(scorecard_f %>% filter(med_earnings_10yrs > 100000))
 ```
 
-After reviewing the histogram of colleges with earnings greater than $100K, it was observed that the majority of their degrees were awarded in STEM-related categories. As STEM fields were already being popularized for careers in high-paying professions, there was a likelihood that the release of the scorecard would not further influence consumer search behavior, and thus could bias the high-earning treatment variable. To address this, the STEM program percentage categories were summed, and a binary variable was added, separating out values greater that 0.5.
+After reviewing the histogram of colleges with earnings greater than $100K, it was observed that the majority of their degrees were awarded in STEM-related categories. As STEM fields were already being popularized for careers in high-paying professions, there was a likelihood that the release of the scorecard would not further influence consumer search behavior, and thus could bias the high-earning treatment variable. To address this, the STEM degree percentage categories were summed, and a binary variable was added, separating out schools with STEM graduates greater than 50%.
 
 
 ```{r}
@@ -63,39 +61,45 @@ sprintf("Missing SAT score rows: %s", sat_nulls)
 Average SAT scores were considered as another possible source of bias, but were dropped after reviewing the number of missing entries, and the expectation that the STEM-majority school variable would control this as high SAT scores would be necessary for admission.
 
 ```{r}
-scorecard_f %>% group_by(CONTROL) %>% summarize(cnt = n())
+scorecard_f %>% group_by(institution_type) %>% summarize(count = n())
 ```
 
-Institution type (private profit, private non-profit, and public) was identified for inclusion as a fixed effect variable. As private universities are typically more expensive than public universities, this could also control for average grad school debt, percentage of Pell loans, and percentage of federal loans. The higher cost of the university could also be correlated with the existing expectation that the education would lead to higher post-graduation earnings. This could bias the high-earning treatment variable as consumers could have ascertained insights into median earnings prior to the release of the scorecard.
+Institution type (private for profit, private non-profit, and public) was identified for inclusion as a fixed effect variable. As private universities are typically more expensive than public universities, this could also control for average grad school debt, percentage of Pell loans, and percentage of federal loans. The higher cost of the university could also be correlated with the existing expectation that the education would lead to higher post-graduation earnings. This could bias the high-earning treatment variable as consumers could have ascertained insights into median earnings prior to the release of the scorecard.
 
-The final variable that was selected to potentially control for endogeneity was the percentage of undergraduates aged 25 or older. Older graduates could have several characteristics that could bias the high-earning treatment variable by influencing decisions to search for higher-earning schools independent of the scorecard. They could be more likely to be attending school for financial reasons which could result in them in doing their own in-depth research into maximizing the highest paying outcomes. Their additional work experience and incomes could increase their ability to get into more academically rigorous schools regardless of interest in future financial benefits.
+The final variable that was selected to potentially control for endogeneity was the percentage of undergraduates aged 25 or older. Older graduates could have multiple characteristics that could bias the high-earning treatment variable by influencing decisions to search for higher-earning schools independent of the scorecard. They could be more likely to be attending school for financial reasons which could result in them in doing their own in-depth research into maximizing the highest paying outcomes. Their additional work experience and incomes could increase their ability to get into more academically rigorous schools regardless of interest in future financial benefits.
 
 ```{r}
-m1 <- scorecard_f %>% feols(ind_z_shift ~ high_earning)
+m1 <- scorecard_f %>% feols(ind_z_shift ~ high_earning, se = "hetero")
 etable(m1)
 ```
-An initial model was created as a baseline, regressing the standardized post-scorecard search ranking shift on the high-earning treatment. The model shows that low-earnings schools saw a increase in average search rankings of -0.21 standard deviations following the introduction of the scorecard (as the rankings were on a scale staring an 1, a decrease in rank is equivalent to an increase). High-earning schools are linearly associated with an additional -0.15 standard deviation increase in search rankings post-scorecard. Both the intercept and the treatment are statistically significant at an alpha of 0.1%.
+
+An initial model was created as a baseline, regressing the standardized post-scorecard search ranking shift on the high-earning treatment. The model shows that low-earnings schools saw a increase in average search rankings of -0.21 standard deviations following the introduction of the scorecard (as the rankings were on a scale staring an 1, a decrease in rank is equivalent to an increase). High-earning schools are linearly associated with an additional -0.15 standard deviation increase in search rankings post-scorecard. Both the intercept and the treatment are statistically significant at an alpha of 0.001, meaning that if the null hypothesis were true, we would only get results like these in 0.1% of the samples.
+
 ```{r}
-m2 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + CONTROL)
-m3 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | CONTROL, se = "hetero")
+m2 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | institution_type, se = "hetero")
+
+etable(m1, m2)
+
+```
+
+Next, institution type was added as fixed effects variable. This caused the effect of the high-earning coefficient to drop to -0.10, meaning controlling for the other variables in the model, high-earning schools saw an increase of -0.10 standard deviation search rankings in addition to low-earning schools following the release of the scorecard. Also, 2% of the variation in the search-ranking shift post scorecard was explained by the within variation in the high-earning treatment, while 31% was explained by the within variation and the institution type.
+
+```{r}
+m3 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri | institution_type, se = "hetero")
 
 etable(m1, m2, m3)
 ```
 
-
+The STEM-graduate majority variable was then added as a binary control while keeping institution type as a fixed effect variable. Holding constant all other variables, STEM-focused schools saw a drop of 0.07 standard deviation rankings after the publication of the scorecard, but was not a statistically significant result. The resulting shift in the high-earning coefficient boosted the search trend rankings by -0.01 standard deviations, while the overall variation in the mdoel improved by 1%.
 ```{r}
 
-```
-
-```{r}
-m4 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | LOCALE)
 m5 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv)
 m6 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
-m7 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem)
-m8 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem | CONTROL, se = "hetero")
+m7 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri)
+m8 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri | CONTROL, se = "hetero")
 
-m15 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem | CONTROL, se = "hetero")
-m16 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem + UG25abv | CONTROL, se = "hetero")
+m15 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri | CONTROL, se = "hetero")
+m16 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri + UG25abv | CONTROL, se = "hetero")
 m17 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
 m18 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv + I(UG25abv^2) | CONTROL, se = "hetero")
 
