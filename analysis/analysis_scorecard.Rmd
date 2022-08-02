@@ -22,7 +22,7 @@ load("processed_data/processed_scorecard.RData")
 
 ## Introduction and Data Cleaning Overview
 
-This analysis explores the impact of the publication of the college scorecard on consumer interest in bachelor's degree-granting educational institutions. Specifically, it examines the relationship with 10-year post graduate earnings. The goal was to see if the scorecard shifted interest from schools with low post-graduate earnings to schools with high ones. In addition to post graduate earnings, the analysis explored controls across intuition types, average student age, percentage of STEM programs, SAT averages, post-graduation debt, and percentage of Pell Grants and all federal loans. 
+This analysis explores the impact of the publication of the college scorecard on consumer interest in bachelor's degree-granting educational institutions. Specifically, it examines the relationship with 10-year post graduate earnings. The goal was to see if the scorecard shifted interest from schools with low post-graduate earnings to schools with high ones. In addition to post graduate earnings, the analysis explored controls across intuition types, average student age, percentage of STEM programs, and SAT averages
 
 Consumer interest was measured by looking at the average shift in standardized Google search rankings following the publication of the scorecard in September 2015. As the Google trends data had 7 months of post-scorecard observations, the table was filtered to 14 months for the analysis. To account for the seasonality of the college application deadlines, the 7-month pre-scorecard covered the time frame of September 2014 to March 2015. An additional binary variable was created to categorize pre and post scorecard implementation groups. 
 
@@ -94,39 +94,29 @@ etable(m1, m2, m3)
 The STEM-graduate majority variable was then added as a binary control while keeping institution type as a fixed effect variable. Holding constant all other variables, STEM-focused schools saw a drop of 0.07 standard deviation rankings after the publication of the scorecard, but was not a statistically significant result. The resulting shift in the high-earning coefficient boosted the search trend rankings by -0.01 standard deviations, while the overall variation in the model improved by 1%. Due to the low impact of STEM-graduate majority variable, it was dropped from further regressions.
 
 ```{r}
-m2 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | institution_type, se = "hetero")
+m4 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | institution_type, se = "hetero")
 
-etable(m1, m2)
-
-```
-```
-
-
-```{r}
-
-m5 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv)
-m6 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
-
-m17 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
-m18 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv + I(UG25abv^2) | CONTROL, se = "hetero")
-
+etable(m1, m2, m4)
 
 ```
 
-```{r}
-etable(m6, m8)
-
-# wald(m16, c("prgm_prct_stem", "UG25abv"))
-# wald(m18, "UG25abv")
-```
+Next, the percentage of students aged 25 or older was added. Adjusting for other variables in the model, a 1 unit increase in the percentage of the 25+ aged students resulted in a search rank increase of -0.51 standard deviations. The impact of high-earning schools was in line with the earlier model, with interest via search trend standard deviations -0.1 higher than low-earning schools. The overall variation explained in the model rose to 37% with 10% explained by the within variation in the high-earning and percentage of 25+ aged students. 
 
 ```{r, echo=FALSE}
-# scorecard_f %>% ggplot(aes(x = `med_earnings_10yrs`)) + geom_histogram(bins = 100)
-scorecard_f %>% ggplot(aes(factor(high_earning), GRAD_DEBT_MDN_SUPP)) + geom_boxplot()
-# scorecard_f %>% ggplot(aes(factor(high_earning), prgm_prct_stem)) + geom_boxplot()
-# scorecard_f %>% ggplot(aes(factor(high_earning), SAT_AVG)) + geom_boxplot()
-# scorecard_f %>% ggplot(aes(prgm_prct_stem, med_earnings_10yrs)) +
-  # geom_point() + geom_smooth(method = "lm")
-scorecard_f %>% ggplot(aes(UG25abv, med_earnings_10yrs)) + geom_point() + geom_smooth(method = "lm")
-scorecard_f %>% ggplot(aes(UG25abv, ind_z_shift)) + geom_point() + geom_smooth(method = "lm")
+scorecard_f %>% ggplot(aes(UG25abv, ind_z_shift)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") +
+  ggtitle("Student Age Population on Google Trend Rankings Post Scorecard Publciation ") +
+  xlab("Percentage of students 25 or older") + 
+  ylab("Standard Deviations") +
+  scale_x_continuous(labels = scales::percent_format())
+
 ```
+
+```{r}
+m5 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv + high_earning * UG25abv| institution_type, se = "hetero")
+
+etable(m1, m2, m4, m5)
+
+```
+As a final step, an interaction between the high-earning category and the percentage of 25+ aged students was included after reviewing the plot of student percentage and post-scorecard implementation ranking shift, as it appeared that a shift in the slope could potentially decrease the size of the residuals.
