@@ -55,7 +55,7 @@ scorecard <- scorecard %>% mutate(across(c(SAT_AVG, UGDS, GRAD_DEBT_MDN_SUPP, UG
 scorecard <- scorecard %>% mutate(across(contains("RET"), as.numeric))
 scorecard <- scorecard %>% mutate(across(contains("PCT"), as.numeric))
 scorecard <- scorecard %>% mutate(across(contains("PCIP"), as.numeric))
-scorecard <- scorecard %>% mutate (prgm_prct_stem = rowSums(acros(c("PCIP10",
+scorecard <- scorecard %>% mutate (prgm_prct_stem = rowSums(across(c("PCIP10",
                                                                      "PCIP11",
                                                                      "PCIP14", 
                                                                      "PCIP15",
