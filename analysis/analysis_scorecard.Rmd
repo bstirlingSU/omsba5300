@@ -68,6 +68,7 @@ Institution type (private for profit, private non-profit, and public) was identi
 
 The final variable that was selected to potentially control for endogeneity was the percentage of undergraduates aged 25 or older. Older graduates could have multiple characteristics that could bias the high-earning treatment variable by influencing decisions to search for higher-earning schools independent of the scorecard. They could be more likely to be attending school for financial reasons which could result in them in doing their own in-depth research into maximizing the highest paying outcomes. Their additional work experience and incomes could increase their ability to get into more academically rigorous schools regardless of interest in future financial benefits.
 
+## Model Analysis
 ```{r}
 m1 <- scorecard_f %>% feols(ind_z_shift ~ high_earning, se = "hetero")
 etable(m1)
@@ -90,22 +91,25 @@ m3 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri | institution_
 etable(m1, m2, m3)
 ```
 
-The STEM-graduate majority variable was then added as a binary control while keeping institution type as a fixed effect variable. Holding constant all other variables, STEM-focused schools saw a drop of 0.07 standard deviation rankings after the publication of the scorecard, but was not a statistically significant result. The resulting shift in the high-earning coefficient boosted the search trend rankings by -0.01 standard deviations, while the overall variation in the mdoel improved by 1%.
+The STEM-graduate majority variable was then added as a binary control while keeping institution type as a fixed effect variable. Holding constant all other variables, STEM-focused schools saw a drop of 0.07 standard deviation rankings after the publication of the scorecard, but was not a statistically significant result. The resulting shift in the high-earning coefficient boosted the search trend rankings by -0.01 standard deviations, while the overall variation in the model improved by 1%. Due to the low impact of STEM-graduate majority variable, it was dropped from further regressions.
+
+```{r}
+m2 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | institution_type, se = "hetero")
+
+etable(m1, m2)
+
+```
+```
+
+
 ```{r}
 
 m5 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv)
 m6 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
-m7 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri)
-m8 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri | CONTROL, se = "hetero")
 
-m15 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri | CONTROL, se = "hetero")
-m16 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + stem_pri + UG25abv | CONTROL, se = "hetero")
 m17 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | CONTROL, se = "hetero")
 m18 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv + I(UG25abv^2) | CONTROL, se = "hetero")
 
-m20 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + prgm_prct_stem + high_earning*prgm_prct_stem | CONTROL, se = "hetero")
-
-m21 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv + high_earning*UG25abv | CONTROL, se = "hetero")
 
 ```
 
