@@ -74,6 +74,7 @@ scorecard_f <- scorecard %>%
 
 quantile(scorecard_f$`med_earnings_10yrs`)
 
+
 scorecard_f <- scorecard_f %>% mutate(earn_cat = case_when(`med_earnings_10yrs` >
                                                          quantile(scorecard_f$`med_earnings_10yrs`)[4] ~  "high",
                                                        `med_earnings_10yrs` <
