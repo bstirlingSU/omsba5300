@@ -50,11 +50,12 @@ scorecard$CONTROL <- recode_factor(scorecard$CONTROL,
                                          "2" = "PrivateNonProfit",
                                          "3" = "PrivateForProfit")
 
+scorecard <- scorecard %>% rename(institution_type = CONTROL)
 scorecard <- scorecard %>% mutate(across(c(SAT_AVG, UGDS, GRAD_DEBT_MDN_SUPP, UG25abv), as.numeric))
 scorecard <- scorecard %>% mutate(across(contains("RET"), as.numeric))
 scorecard <- scorecard %>% mutate(across(contains("PCT"), as.numeric))
 scorecard <- scorecard %>% mutate(across(contains("PCIP"), as.numeric))
-scorecard <- scorecard %>% mutate (prgm_prct_stem = rowSums(across(c("PCIP10",
+scorecard <- scorecard %>% mutate (prgm_prct_stem = rowSums(acros(c("PCIP10",
                                                                      "PCIP11",
                                                                      "PCIP14", 
                                                                      "PCIP15",
@@ -72,6 +73,7 @@ scorecard_f <- scorecard %>%
   inner_join(trends, by = "schname") %>% subset(select = -schname)
 
 quantile(scorecard_f$`med_earnings_10yrs`)
+
 scorecard_f <- scorecard_f %>% mutate(earn_cat = case_when(`med_earnings_10yrs` >
                                                          quantile(scorecard_f$`med_earnings_10yrs`)[4] ~  "high",
                                                        `med_earnings_10yrs` <
