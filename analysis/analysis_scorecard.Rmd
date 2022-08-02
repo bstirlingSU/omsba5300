@@ -3,8 +3,8 @@ title: "analysis"
 author: "Brad Stirling"
 date: "2022-07-30"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
