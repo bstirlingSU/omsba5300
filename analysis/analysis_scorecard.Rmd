@@ -52,7 +52,7 @@ scorecard_f %>% ggplot(aes(x = `med_earnings_10yrs`)) +
 scorecard_f %>% filter(med_earnings_10yrs > 100000) %>% arrange(desc(med_earnings_10yrs))
 ```
 
-After reviewing the histogram of colleges with earnings greater than $100K, it was observed that the majority of their degrees were awarded in STEM-related categories. To address this, the STEM degree percentage categories were summed, and a binary variable was added, separating out schools with STEM graduates greater than 50%. This category was ultimately not used in the model as it would have resulted in washing out variation from our treatment variable.
+The histogram of the median earnings per school was skewed right for higher-earning schools. After subsetting the scorecard to schools with median earnings greater than $100K, it was observed that their graduates were all in STEM fields.To address this in the model, the STEM degree percentage categories were summed, and a binary variable was added, separating out schools with STEM graduates greater than 50%. The STEM control was considered a bias source as it could have affected both the high earning category and the shift in search rankings. STEM fields typically pay much higher than other careers, thus positively impacting median earnings for schools with heavy concentrations of these graduates. Additionally, STEM fields were already gaining popularity at the time the scorecard was released, and interest in STEM-focused schools could have been less impacted by its release as it would have been common knowledge to consumers. This category was ultimately not used in the model as it would have resulted in washing out variation from our treatment variable. By removing STEM fields from the High-earning category, it would just been comparing the students who didn't graduate in these programs.
 
 
 ```{r}
@@ -60,15 +60,15 @@ sat_nulls <- sum(is.na(scorecard_f$SAT_AVG))
 sprintf("Missing SAT score rows: %s", sat_nulls)
 ```
 
-Average SAT scores were also considered, but were not used in the model as it would not have been a source of endogeneity for the high-earning school category, and the number of missing observations would have removed too much data from the analysis.
+Average SAT scores were also explored but were not used in the model. Though it could have affected the high-income category, with students who test well being more goal-driven and thus seeking out higher paying jobs after graduation, it would not have impacted the search rankings. Additionally, the high number of missing observations would have removed too much data from the analysis.
 
 ```{r}
 scorecard_f %>% group_by(institution_type) %>% summarize(count = n())
 ```
 
-Institution type (private for profit, private non-profit, and public) was identified for inclusion as a fixed effect variable as they have many characteristics that don’t change over time and could cause endogeneity. Private universities are typically more expensive than public universities, which could also control for average grad school debt, cost, percentage of Pell loans, and percentage of federal loans. The higher cost of the university could bias the high-earning treatment variable as individuals who attend these schools could be more driven to seek out higher paying jobs after graduation to justify the cost of the education, regardless of the programs offered by the school.
+Institution type (private for profit, private non-profit, and public) was identified for inclusion as a fixed effect variable as they have many characteristics that don’t change over time and could cause endogeneity. Private universities are typically more expensive than public universities, which could also control for average grad school debt, cost, percentage of Pell loans, and percentage of federal loans. As the price of the school would already have been known prior to the publication of the scorecard, students who were interested in these schools could be more driven to seek out higher paying careers after graduation to offset the expense. Like the STEM-field categorization, the interest for technical degrees was already growing, and thus the increased search interest in high-earning colleges existed independent of the scorecard publication. 
 
-The final variable that was selected to potentially control for endogeneity was the percentage of undergraduates aged 25 or older. Older graduates could have multiple characteristics that could bias the treatment variable. They could have more focused career goals resulting in greater financial success after graduation. Their additional work experience prior to attending college could lead to higher incomes afterward as they would already have stronger resumes than younger graduates.
+The final variable that was selected to control for endogeneity was the percentage of undergraduates aged 25 or older. Older graduates could have multiple characteristics that could bias the treatment variable and the search rankings. They could have more focused career goals resulting in greater financial success after graduation. Their additional work experience prior to attending college could lead to higher incomes afterward as they would already have stronger resumes than younger graduates. As this group of students could have spent more time researching and preparing for schools, it’s likely they would have had more knowledge about higher-earning colleges, and thus their search behavior would not have been influenced by the scorecard release.  
 
 ## Model Analysis
 
@@ -80,13 +80,14 @@ etable(m1)
 An initial model was created as a baseline, regressing the standardized post-scorecard search ranking shift on the high-earning treatment. The model showed that low-earnings schools saw an increase in average search rankings of -0.21 standard deviations following the introduction of the scorecard. Note: as the rankings were on a low to high scale starting at 1, a decrease is interpreted as increase. High-earning schools were linearly associated with an additional -0.15 standard deviation increase in search rankings post scorecard. Both the intercept and the treatment were statistically significant at an alpha of 0.001, meaning that if the null hypothesis were true, we would only get results like these in 0.1% of the samples.
 
 ```{r}
+m1_5 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | institution_type)
 m2 <- scorecard_f %>% feols(ind_z_shift ~ high_earning | institution_type, se = "hetero")
 
-etable(m1, m2)
+etable(m1, m1_5, m2)
 
 ```
 
-Next, institution type was added as fixed effects variable. This caused the effect of the high-earning coefficient to drop to -0.10, meaning controlling for the other variables in the model, high-earning schools saw an increase of -0.10 search ranking standard deviations in addition to low-earning schools, following the release of the scorecard. Also, 2% of the variation in the search-ranking shift was explained by the within variation in the high-earning treatment, while 31% of the total variation in the model was explained by the within variation and the institution type.
+Next, institution type was added as fixed effects variable. Models with both cluster-robust and heteroskedasticity-robust standard errors were created. Due to the large amount of variance in institution type, the heteroskedasticity model was kept. The addition of this variable caused the effect of the high-earning coefficient to drop to -0.10, meaning controlling for the other variables in the model, high-earning schools saw an increase of -0.10 search ranking standard deviations in addition to low-earning schools, following the release of the scorecard. Also, 2% of the variation in the search-ranking shift was explained by the within variation in the high-earning treatment, while 31% of the total variation in the model was explained by the within variation and the institution type. 
 
 ```{r}
 m3 <- scorecard_f %>% feols(ind_z_shift ~ high_earning + UG25abv | institution_type, se = "hetero")
@@ -116,7 +117,7 @@ glht(m4, "high_earning + high_earning:UG25abv = 0") %>% summary()
 
 ```
 
-An interaction between the high-earning category and the percentage of 25+ aged students was included after reviewing the plot of student percentage and post-scorecard implementation ranking shift, as it appeared that a shift in the slope could potentially decrease the size of the residuals of the linear regression line. Holding all over variables constant, high-earning schools saw an increase in ranking post-scorecard implementation of -0.04 standard deviations, with an additional increase of -0.2 standard deviations when the percentage of 25+ aged students increased by 1 unit. As the result of the general linear hypothesis test was statistically significant at a 1% alpha, it was concluded that the interaction should be dropped from the model.
+An interaction between the high-earning category and the percentage of 25+ aged students was included after reviewing the plot of student percentage and post-scorecard implementation ranking shift, as it appeared that a shift in the slope could potentially decrease the size of the residuals of the linear regression line. Holding all over variables constant, high-earning schools saw an increase in ranking post-scorecard implementation of -0.04 standard deviations, with an additional increase of -0.2 standard deviations when the percentage of 25+ aged students increased by 1 unit. As the result of the general linear hypothesis test was statistically significant at a 1% alpha, it was concluded that the interaction did not explain additional variation, and thus was dropped from the model.
 
 
 ```{r}
@@ -136,4 +137,4 @@ etable(m3)
 
 ```
 
-After reviewing the results of each regression, it was determined that the strongest model controlled for percentage of students 25 years or older, and the institution type. Thus, it can be concluded, that following the release of the scorecard, high-earning colleges had larger shift in rankings relative to lower earning ones. The model shows that holding all other variables constant, they saw an additional -0.1 increase in standardized search rankings post-publication above their lower-earning counterparts.
+After reviewing the results of each regression, it was determined that the strongest model controlled for percentage of students 25 years or older, and the institution type. Thus, it can be concluded, that following the release of the scorecard, high-earning colleges had larger shift in rankings relative to lower earning ones. The model shows that holding all other variables constant, high-earning colleges saw an additional -0.1 increase in standardized search rankings post-publication above their lower-earning counterparts.

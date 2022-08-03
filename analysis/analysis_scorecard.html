@@ -465,20 +465,33 @@ were further explored as potential sources of endogeneity.</p>
 ## #   SATVRMID &lt;chr&gt;, SATMTMID &lt;chr&gt;, SATWRMID &lt;chr&gt;, ACTCM25 &lt;chr&gt;,
 ## #   ACTCM75 &lt;chr&gt;, ACTEN25 &lt;chr&gt;, ACTEN75 &lt;chr&gt;, ACTMT25 &lt;chr&gt;, ACTMT75 &lt;chr&gt;,
 ## #   ACTWR25 &lt;chr&gt;, ACTWR75 &lt;chr&gt;, ACTCMMID &lt;chr&gt;, ACTENMID &lt;chr&gt;, …</code></pre>
-<p>After reviewing the histogram of colleges with earnings greater than
-$100K, it was observed that the majority of their degrees were awarded
-in STEM-related categories. To address this, the STEM degree percentage
-categories were summed, and a binary variable was added, separating out
-schools with STEM graduates greater than 50%. This category was
-ultimately not used in the model as it would have resulted in washing
-out variation from our treatment variable.</p>
+<p>The histogram of the median earnings per school was skewed right for
+higher-earning schools. After subsetting the scorecard to schools with
+median earnings greater than $100K, it was observed that their graduates
+were all in STEM fields.To address this in the model, the STEM degree
+percentage categories were summed, and a binary variable was added,
+separating out schools with STEM graduates greater than 50%. The STEM
+control was considered a bias source as it could have affected both the
+high earning category and the shift in search rankings. STEM fields
+typically pay much higher than other careers, thus positively impacting
+median earnings for schools with heavy concentrations of these
+graduates. Additionally, STEM fields were already gaining popularity at
+the time the scorecard was released, and interest in STEM-focused
+schools could have been less impacted by its release as it would have
+been common knowledge to consumers. This category was ultimately not
+used in the model as it would have resulted in washing out variation
+from our treatment variable. By removing STEM fields from the
+High-earning category, it would just been comparing the students who
+didn’t graduate in these programs.</p>
 <pre class="r"><code>sat_nulls &lt;- sum(is.na(scorecard_f$SAT_AVG))
 sprintf(&quot;Missing SAT score rows: %s&quot;, sat_nulls)</code></pre>
 <pre><code>## [1] &quot;Missing SAT score rows: 354&quot;</code></pre>
-<p>Average SAT scores were also considered, but were not used in the
-model as it would not have been a source of endogeneity for the
-high-earning school category, and the number of missing observations
-would have removed too much data from the analysis.</p>
+<p>Average SAT scores were also explored but were not used in the model.
+Though it could have affected the high-income category, with students
+who test well being more goal-driven and thus seeking out higher paying
+jobs after graduation, it would not have impacted the search rankings.
+Additionally, the high number of missing observations would have removed
+too much data from the analysis.</p>
 <pre class="r"><code>scorecard_f %&gt;% group_by(institution_type) %&gt;% summarize(count = n())</code></pre>
 <pre><code>## # A tibble: 3 × 2
 ##   institution_type count
@@ -492,18 +505,24 @@ many characteristics that don’t change over time and could cause
 endogeneity. Private universities are typically more expensive than
 public universities, which could also control for average grad school
 debt, cost, percentage of Pell loans, and percentage of federal loans.
-The higher cost of the university could bias the high-earning treatment
-variable as individuals who attend these schools could be more driven to
-seek out higher paying jobs after graduation to justify the cost of the
-education, regardless of the programs offered by the school.</p>
-<p>The final variable that was selected to potentially control for
-endogeneity was the percentage of undergraduates aged 25 or older. Older
-graduates could have multiple characteristics that could bias the
-treatment variable. They could have more focused career goals resulting
+As the price of the school would already have been known prior to the
+publication of the scorecard, students who were interested in these
+schools could be more driven to seek out higher paying careers after
+graduation to offset the expense. Like the STEM-field categorization,
+the interest for technical degrees was already growing, and thus the
+increased search interest in high-earning colleges existed independent
+of the scorecard publication.</p>
+<p>The final variable that was selected to control for endogeneity was
+the percentage of undergraduates aged 25 or older. Older graduates could
+have multiple characteristics that could bias the treatment variable and
+the search rankings. They could have more focused career goals resulting
 in greater financial success after graduation. Their additional work
 experience prior to attending college could lead to higher incomes
 afterward as they would already have stronger resumes than younger
-graduates.</p>
+graduates. As this group of students could have spent more time
+researching and preparing for schools, it’s likely they would have had
+more knowledge about higher-earning colleges, and thus their search
+behavior would not have been influenced by the scorecard release.</p>
 </div>
 <div id="model-analysis" class="section level2">
 <h2>Model Analysis</h2>
@@ -532,24 +551,28 @@ standard deviation increase in search rankings post scorecard. Both the
 intercept and the treatment were statistically significant at an alpha
 of 0.001, meaning that if the null hypothesis were true, we would only
 get results like these in 0.1% of the samples.</p>
-<pre class="r"><code>m2 &lt;- scorecard_f %&gt;% feols(ind_z_shift ~ high_earning | institution_type, se = &quot;hetero&quot;)
+<pre class="r"><code>m1_5 &lt;- scorecard_f %&gt;% feols(ind_z_shift ~ high_earning | institution_type)
+m2 &lt;- scorecard_f %&gt;% feols(ind_z_shift ~ high_earning | institution_type, se = &quot;hetero&quot;)
 
-etable(m1, m2)</code></pre>
-<pre><code>##                                   m1                  m2
-## Dependent Var.:          ind_z_shift         ind_z_shift
-##                                                         
-## (Intercept)      -0.2138*** (0.0184)                    
-## high_earning     -0.1483*** (0.0295) -0.1011*** (0.0244)
-## Fixed-Effects:   ------------------- -------------------
-## institution_type                  No                 Yes
-## ________________ ___________________ ___________________
-## S.E. type        Heteroskedast.-rob. Heteroskedast.-rob.
-## Observations                     886                 886
-## R2                           0.02777             0.31493
-## Within R2                         --             0.01831
+etable(m1, m1_5, m2)</code></pre>
+<pre><code>##                                   m1             m1_5                  m2
+## Dependent Var.:          ind_z_shift      ind_z_shift         ind_z_shift
+##                                                                          
+## (Intercept)      -0.2138*** (0.0184)                                     
+## high_earning     -0.1483*** (0.0295) -0.1011 (0.0841) -0.1011*** (0.0244)
+## Fixed-Effects:   ------------------- ---------------- -------------------
+## institution_type                  No              Yes                 Yes
+## ________________ ___________________ ________________ ___________________
+## S.E. type        Heteroskedast.-rob. by: institutio.. Heteroskedast.-rob.
+## Observations                     886              886                 886
+## R2                           0.02777          0.31493             0.31493
+## Within R2                         --          0.01831             0.01831
 ## ---
 ## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<p>Next, institution type was added as fixed effects variable. This
+<p>Next, institution type was added as fixed effects variable. Models
+with both cluster-robust and heteroskedasticity-robust standard errors
+were created. Due to the large amount of variance in institution type,
+the heteroskedasticity model was kept. The addition of this variable
 caused the effect of the high-earning coefficient to drop to -0.10,
 meaning controlling for the other variables in the model, high-earning
 schools saw an increase of -0.10 search ranking standard deviations in
@@ -648,7 +671,8 @@ post-scorecard implementation of -0.04 standard deviations, with an
 additional increase of -0.2 standard deviations when the percentage of
 25+ aged students increased by 1 unit. As the result of the general
 linear hypothesis test was statistically significant at a 1% alpha, it
-was concluded that the interaction should be dropped from the model.</p>
+was concluded that the interaction did not explain additional variation,
+and thus was dropped from the model.</p>
 <pre class="r"><code>m5 &lt;- scorecard_f %&gt;% feols(ind_z_shift ~ high_earning + UG25abv + GRAD_DEBT_MDN_SUPP| institution_type, se = &quot;hetero&quot;)</code></pre>
 <pre><code>## NOTE: 24 observations removed because of NA values (RHS: 24).</code></pre>
 <pre class="r"><code>etable(m1, m2, m3, m5)</code></pre>
@@ -712,9 +736,9 @@ that the strongest model controlled for percentage of students 25 years
 or older, and the institution type. Thus, it can be concluded, that
 following the release of the scorecard, high-earning colleges had larger
 shift in rankings relative to lower earning ones. The model shows that
-holding all other variables constant, they saw an additional -0.1
-increase in standardized search rankings post-publication above their
-lower-earning counterparts.</p>
+holding all other variables constant, high-earning colleges saw an
+additional -0.1 increase in standardized search rankings
+post-publication above their lower-earning counterparts.</p>
 </div>
 
 
