@@ -500,18 +500,21 @@ too much data from the analysis.</p>
 ## 2 PrivateNonProfit   505
 ## 3 PrivateForProfit   166</code></pre>
 <p>Institution type (private for profit, private non-profit, and public)
-was identified for inclusion as a fixed effect variable as they have
-many characteristics that don’t change over time and could cause
+was identified for inclusion as a fixed effect variable as it controls
+for many characteristics that don’t change over time and could cause
 endogeneity. Private universities are typically more expensive than
-public universities, which could also control for average grad school
-debt, cost, percentage of Pell loans, and percentage of federal loans.
-As the price of the school would already have been known prior to the
-publication of the scorecard, students who were interested in these
-schools could be more driven to seek out higher paying careers after
-graduation to offset the expense. Like the STEM-field categorization,
-the interest for technical degrees was already growing, and thus the
-increased search interest in high-earning colleges existed independent
-of the scorecard publication.</p>
+public universities and often harder to get into. This could potentially
+control for average grad school debt, cost, testing aptitude, GPA,
+percentage of Pell Loans and percentage of federal loans. While many of
+these variables are already in the dataset, the number of missing values
+precludes them from inclusion in the model. Also, as the price of the
+school would already have been known prior to the publication of the
+scorecard, students who were interested in these schools could be more
+driven to seek out higher paying careers after graduation to offset the
+expense. Like the STEM-field categorization, the interest for technical
+degrees was already growing, and thus the increased search interest in
+high-earning colleges existed independent of the scorecard
+publication.</p>
 <p>The final variable that was selected to control for endogeneity was
 the percentage of undergraduates aged 25 or older. Older graduates could
 have multiple characteristics that could bias the treatment variable and
