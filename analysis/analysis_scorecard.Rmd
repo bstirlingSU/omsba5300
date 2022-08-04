@@ -9,7 +9,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
 ```{r}
@@ -19,7 +18,7 @@ library(tidyverse)
 ```
 
 ```{r}
-load("processed_data/processed_scorecard.RData")
+load("../processed_data/processed_scorecard.RData")
 ```
 
 ## Introduction and Data Cleaning Overview
@@ -137,4 +136,4 @@ etable(m3)
 
 ```
 
-After reviewing the results of each regression, it was determined that the strongest model controlled for percentage of students 25 years or older, and the institution type. Thus, it can be concluded, that following the release of the scorecard, high-earning colleges had larger shift in rankings relative to lower earning ones. The model shows that holding all other variables constant, high-earning colleges saw an additional -0.1 increase in standardized search rankings post-publication above their lower-earning counterparts.
+After reviewing the results of each regression, it was determined that the strongest model controlled for percentage of students 25 years or older, and the institution type, as it had the strongest effect for the high earning variable and additional controls, while still being statistically significant. The model shows that holding all other variables constant, high-earning colleges saw an additional -0.1 increase in search ranking standard deviations post-publication above the low-earning colleges. Thus, it can be concluded, that among colleges that predominately grant bachelor's degrees, the release of the scorecard shifted interest to high-earning schools relative to lower earning ones.
